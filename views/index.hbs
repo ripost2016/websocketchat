@@ -1,0 +1,82 @@
+<div class="container">
+    <div class="app">
+        <header>
+            <h1>CHAT</h1>
+        </header>
+        <div class="interface p-2">
+            <div class="row">
+                <div class="col-md-11">
+                    <div class="consola">
+                        <div class="card mensajes p-2 mb-2">
+                            <ul id="mensajes" class="list-group">
+                                {{!-- <li class="list-group-item">
+                                    <span class="nick">ric</span>
+                                    <span class="msg">Lorem ipsum dolor, sit amet consectetur adipisicing elit. At,
+                                        aspernatur!</span>
+                                </li> --}}
+                            </ul>
+                        </div>
+
+                        <div class="card controles p-2">
+                            <div class="input-group">
+                                <input id="mensaje" class="form-control" type="text" placeholder="mensaje" />
+                                <input id="nick" class="form-control" type="text" placeholder="nick">
+                                <div class="input-group-append">
+                                    <input id="send" class="btn btn-primary" type="submit" value="send">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-1">
+                    <div class="card clientes p-2 bg-info">
+                        <p id="clientes" class="card-text text-center"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    let socket = io();
+
+    $('#send').click(() => {
+        socket.emit('chat:message', {
+            mensaje: $('#mensaje').val(),
+            nick: $('#nick').val()
+        })
+    });
+
+    socket.on('chat:message', (data) => {
+        console.log(data);
+
+        $('#mensajes').append($('<li>').append(`<strong>${data.nick}</strong>: ${data.mensaje}`));
+
+        showNotification(data.nick, data.mensaje);
+    });
+
+    socket.on('chat:users', (data) => {
+        console.log(data);
+        $('#clientes').text(data.clientes);
+    });
+
+    function showNotification(nick, mensaje) {
+        const options = {
+            body: mensaje,
+            dir: 'ltr'
+        }
+
+        if (Notification.permission === 'granted') {
+            let notification = new Notification(`${nick} ha escrito un nuevo mensaje`, options)
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission((permission) => {
+                if (permission === 'granted') {
+                    let notification = new Notification(`${nick} ha enviado un nuevo mensaje`, options);
+                }
+            });
+        }
+    }
+</script>
